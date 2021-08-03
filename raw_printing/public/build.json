@@ -1,0 +1,20 @@
+{
+	"js/point-of-sale.min.js": [
+		"stripe_terminal/public/js/stripe_terminal.js",
+		"pos_assets/pos_item_selector.js",
+		"pos_assets/pos_item_cart.js",
+		"pos_assets/pos_item_details.js",
+		"serial_device/custom_scripts/pos_serial_scripts/pos_item_details.js",
+		"pos_assets/pos_number_pad.js",
+		"pos_assets/pos_payment.js",
+		"custom_scripts/pos_scripts/pos_payment.js",
+		"serial_device/custom_scripts/pos_serial_scripts/pos_payment.js",
+		"pos_assets/pos_past_order_list.js",
+		"pos_assets/pos_past_order_summary.js",
+		"custom_scripts/pos_scripts/pos_past_order_summary.js",
+		"pos_assets/pos_controller.js",
+		"serial_device/custom_scripts/pos_serial_scripts/pos_controller.js",
+		"stripe_terminal/custom_scripts/point_of_sale/pos_controller.js",
+		"custom_scripts/pos_scripts/pos_controller.js"
+	]
+}
