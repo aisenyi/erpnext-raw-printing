@@ -28,41 +28,41 @@ erpnext.PointOfSale.Payment = class extends erpnext.PointOfSale.Payment {
 	make_invoice_fields_control() {
 		frappe.db.get_doc("POS Settings", undefined).then((doc) => {
 			const fields = doc.invoice_fields;
-			if (!fields.length) return;
-
 			this.$invoice_fields = this.$invoice_fields_section.find('.invoice-fields');
 			this.$invoice_fields.html('');
-			const frm = this.events.get_frm();
+			if (fields.length){
+				const frm = this.events.get_frm();
 
-			fields.forEach(df => {
-				this.$invoice_fields.append(
-					`<div class="invoice_detail_field ${df.fieldname}-field" data-fieldname="${df.fieldname}"></div>`
-				);
-				let df_events = {
-					onchange: function() {
-						frm.set_value(this.df.fieldname, this.value);
-					}
-				};
-				if (df.fieldtype == "Button") {
-					df_events = {
-						click: function() {
-							if (frm.script_manager.has_handlers(df.fieldname, frm.doc.doctype)) {
-								frm.script_manager.trigger(df.fieldname, frm.doc.doctype, frm.doc.docname);
-							}
+				fields.forEach(df => {
+					this.$invoice_fields.append(
+						`<div class="invoice_detail_field ${df.fieldname}-field" data-fieldname="${df.fieldname}"></div>`
+					);
+					let df_events = {
+						onchange: function() {
+							frm.set_value(this.df.fieldname, this.value);
 						}
 					};
-				}
+					if (df.fieldtype == "Button") {
+						df_events = {
+							click: function() {
+								if (frm.script_manager.has_handlers(df.fieldname, frm.doc.doctype)) {
+									frm.script_manager.trigger(df.fieldname, frm.doc.doctype, frm.doc.docname);
+								}
+							}
+						};
+					}
 
-				this[`${df.fieldname}_field`] = frappe.ui.form.make_control({
-					df: {
-						...df,
-						...df_events
-					},
-					parent: this.$invoice_fields.find(`.${df.fieldname}-field`),
-					render_input: true,
+					this[`${df.fieldname}_field`] = frappe.ui.form.make_control({
+						df: {
+							...df,
+							...df_events
+						},
+						parent: this.$invoice_fields.find(`.${df.fieldname}-field`),
+						render_input: true,
+					});
+					this[`${df.fieldname}_field`].set_value(frm.doc[df.fieldname]);
 				});
-				this[`${df.fieldname}_field`].set_value(frm.doc[df.fieldname]);
-			});
+			}
 			
 			//For raw printing buttons
 			this.$invoice_fields.append(

@@ -1,6 +1,5 @@
 frappe.ui.form.on('POS Profile', {
 	refresh: function(frm) {
-		console.log('Toggle');
 		frm.trigger('toggle_raw_display');
 	},
 	

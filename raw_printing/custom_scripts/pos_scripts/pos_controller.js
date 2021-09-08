@@ -61,10 +61,8 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		});
 
 		frappe.db.get_doc("POS Profile", this.pos_profile).then((profile) => {
-			console.log({"profile": profile});
 			window.enable_raw_print = profile.enable_raw_printing;
 			//Select raw printer
-			console.log(window.enable_raw_print);
 			if(window.enable_raw_print == 1){
 				var d = new frappe.ui.Dialog({
 					'fields': [
@@ -80,7 +78,6 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 					secondary_action_label: "Cancel",
 					'title': 'Select printer for Raw Printing'
 				});
-				console.log({"d": d});
 				frappe.ui.form.qz_get_printer_list().then((data) => {
 					d.set_df_property('printer', 'options', data);
 				});
@@ -145,8 +142,13 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 						this.frm.savesubmit()
 							.then((r) => {
 								//For raw printing
-								this.raw_print(this.frm);							
+								if(window.open_cash_drawer_automatically == 1){
+									this.open_cash_drawer();
+								}
 								
+								if(window.automatically_print == 1){
+									this.raw_print(this.frm);							
+								}
 								this.toggle_components(false);
 								this.order_summary.toggle_component(true);
 								this.order_summary.load_summary_of(this.frm.doc, true);
@@ -174,7 +176,6 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		if(window.enable_raw_print == 1 && window.raw_printer){
 			var me = this;
 			frappe.ui.form.qz_get_printer_list().then(function(printers){
-				//console.log(printers);
 				var config;
 				printers.forEach(function(printer){
 					if(printer == window.raw_printer){
@@ -193,7 +194,6 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		if(window.enable_raw_print == 1 && window.raw_printer){
 			var me = this;
 			frappe.ui.form.qz_get_printer_list().then(function(printers){
-				//console.log(printers);
 				var config;
 				printers.forEach(function(printer){
 					if(printer == window.raw_printer){
@@ -215,12 +215,11 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 					'Time: ' + frm.doc.posting_time + '\x0A' + '\x0A',
 					'\x1B' + '\x61' + '\x30', // left align
 					'\x1B' + '\x45' + '\x0D', //bold on
-					'Item                                Amount' + '\x0A',
+					'Item                                 Amount' + '\x0A',
 					'\x1B' + '\x45' + '\x0A' //bold off
 				];
 				frm.doc.items.forEach(function(row){
 					var rdata = me.get_item_print(row.item_name, row.qty, row.rate, row.amount);
-					console.log(rdata);
 					data.push.apply(data, rdata)
 				});
 				data.push(
@@ -228,7 +227,7 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 				);
 				var tprint = me.get_total_print(frm.doc);
 				data.push.apply(data, tprint);
-				data.push('\x1B' + '\x69');   // cut paper (old syntax)
+				//data.push('\x1B' + '\x69');   // cut paper (old syntax)
 				
 				
 				var data2 = [
@@ -278,11 +277,18 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 				// '\x1D' + '\x56'  + '\x30' // full cut (new syntax)
 				// '\x1D' + '\x56'  + '\x01' // partial cut (new syntax)
 				// '\x1D' + '\x56'  + '\x31' // partial cut (new syntax)
-				   '\x10' + '\x14' + '\x01' + '\x00' + '\x05',  // Generate Pulse to kick-out cash drawer**
+				//  '\x10' + '\x14' + '\x01' + '\x00' + '\x05',  // Generate Pulse to kick-out cash drawer**
 																// **for legacy drawer cable CD-005A.  Research before using.
 																// see also http://keyhut.com/popopen4.htm
 				];
 				qz.print(config, data);
+				
+				//Send cut paper command after print
+				var cut = [
+					'\x1B' + '\x40',          // init
+					'\x1B' + '\x69'         // cut paper (old syntax)
+				];
+				qz.print(config, cut);
 			});
 		}
 	}
@@ -324,7 +330,7 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		if(doc.payments && doc.payments.length > 0){
 			doc.payments.forEach(function(row){
 				length = row.base_amount.toString().length;
-				total = row.mode_of_payment;
+				total = row.mode_of_payment + ' ';
 				for(var i=length; i<=11; i++){
 					total = total + ' ';
 				}
@@ -367,9 +373,9 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		}
 		
 		//Add the cash drawer kickout
-		if(cash_drawer.length > 0){
+		/*if(cash_drawer.length > 0){
 			ret.push.apply(ret, cash_drawer);
-		}
+		}*/
 		
 		return ret;
 	}
@@ -391,7 +397,7 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		
 		//Add amount at end of qty-rate line
 		var alength = amount.toString().length;
-		for(var i=0; i<(10-alength); i++){
+		for(var i=0; i<(11-alength); i++){
 			qty_rate = qty_rate + " ";
 		}
 		qty_rate = qty_rate + "$" + amount.toString();
