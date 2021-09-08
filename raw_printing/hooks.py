@@ -15,6 +15,7 @@ app_license = "MIT"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/raw_printing/css/raw_printing.css"
 # app_include_js = "/assets/raw_printing/js/raw_printing.js"
+app_include_js = "/assets/js/form-raw.min.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/raw_printing/css/raw_printing.css"
@@ -24,11 +25,11 @@ app_license = "MIT"
 # website_theme_scss = "raw_printing/public/scss/website"
 
 # include js, css files in header of web form
-# webform_include_js = {"doctype": "public/js/doctype.js"}
+#webform_include_js = {"pos_invoice": "custom_scripts/frappe/form.js"}
 # webform_include_css = {"doctype": "public/css/doctype.css"}
 
 # include js in page
-page_js = {"point-of-sale" : "custom_scripts/point_of_sale/point_of_sale.js"}
+#page_js = {"point-of-sale" : "custom_scripts/point_of_sale/point_of_sale.js"}
 
 # include js in doctype views
 doctype_js = {"pos_profile" : "custom_scripts/pos_profile/pos_profile.js"}
@@ -94,8 +95,13 @@ doctype_js = {"pos_profile" : "custom_scripts/pos_profile/pos_profile.js"}
 # 		"on_update": "method",
 # 		"on_cancel": "method",
 # 		"on_trash": "method"
-#	}
+#	},
 # }
+doc_events = {
+	"AccountsController": {
+		"validate": "raw_printing.custom_scripts.amount_in_words.validate"
+	},
+}
 
 # Scheduled Tasks
 # ---------------
@@ -172,4 +178,11 @@ user_data_fields = [
 # auth_hooks = [
 # 	"raw_printing.auth.validate"
 # ]
+
+#For jinja printing
+jenv = {
+	"methods": [
+		"money_in_words:raw_printing.custom_scripts.amount_in_words.money_in_words",
+	]
+}
 
