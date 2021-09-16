@@ -329,10 +329,6 @@ erpnext.PointOfSale.StripeTerminal = function(){
 					payment.frm.savesubmit()
 						.then((sales_invoice) => {
 							//For raw printing
-							if(window.open_cash_drawer_automatically == 1){
-								payment.open_cash_drawer();
-							}
-							
 							if(window.automatically_print == 1){
 								payment.raw_print(payment.frm);							
 							}
