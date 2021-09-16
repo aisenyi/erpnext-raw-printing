@@ -193,6 +193,7 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 	raw_print(frm){
 		if(window.enable_raw_print == 1 && window.raw_printer){
 			var me = this;
+			
 			frappe.ui.form.qz_get_printer_list().then(function(printers){
 				var config;
 				printers.forEach(function(printer){
@@ -215,80 +216,24 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 					'Time: ' + frm.doc.posting_time + '\x0A' + '\x0A',
 					'\x1B' + '\x61' + '\x30', // left align
 					'\x1B' + '\x45' + '\x0D', //bold on
-					'Item                                 Amount' + '\x0A',
+					'Item                                Amount' + '\x0A',
 					'\x1B' + '\x45' + '\x0A' //bold off
 				];
 				frm.doc.items.forEach(function(row){
 					var rdata = me.get_item_print(row.item_name, row.qty, row.rate, row.amount);
 					data.push.apply(data, rdata)
 				});
-				data.push(
-					'\x1B' + '\x61' + '\x32' // right align
-				);
+				//data.push(
+				//	'\x1B' + '\x61' + '\x32' // right align
+				//);
 				var tprint = me.get_total_print(frm.doc);
 				data.push.apply(data, tprint);
-				//data.push('\x1B' + '\x69');   // cut paper (old syntax)
-				
-				
-				var data2 = [
-				   '\x1B' + '\x40',          // init
-				   '\x1B' + '\x61' + '\x31', // center align
-				   'Beverly Hills, CA  90210' + '\x0A',
-				   '\x0A',                   // line break
-				   'www.qz.io' + '\x0A',     // text and line break
-				   '\x0A',                   // line break
-				   '\x0A',                   // line break
-				   'May 18, 2016 10:30 AM' + '\x0A',
-				   '\x0A',                   // line break
-				   '\x0A',                   // line break    
-				   '\x0A',
-				   'Transaction # 123456 Register: 3' + '\x0A',
-				   '\x0A',
-				   '\x0A',
-				   '\x0A',
-				   '\x1B' + '\x61' + '\x30', // left align
-				   'Baklava (Qty 4)       9.00' + '\x1B' + '\x74' + '\x13' + '\xAA', //print special char symbol after numeric
-				   '\x0A',
-				   'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX' + '\x0A',       
-				   '\x1B' + '\x45' + '\x0D', // bold on
-				   'Here\'s some bold text!',
-				   '\x0A',
-				   '\x1B' + '\x45' + '\x0A', // bold off
-				   '\x1D' + '\x21' + '\x11', // double font size
-				   'Here\'s large text!',
-				   '\x0A',
-				   '\x1D' + '\x21' + '\x00', // standard font size
-				   '\x1B' + '\x61' + '\x32', // right align
-				   '\x1B' + '\x21' + '\x30', // em mode on
-				   'DRINK ME',
-				   '\x1B' + '\x21' + '\x0A' + '\x1B' + '\x45' + '\x0A', // em mode off
-				   '\x0A' + '\x0A',
-				   '\x1B' + '\x61' + '\x30', // left align
-				   '------------------------------------------' + '\x0A',
-				   '\x1B' + '\x4D' + '\x31', // small text
-				   'EAT ME' + '\x0A',
-				   '\x1B' + '\x4D' + '\x30', // normal text
-				   '------------------------------------------' + '\x0A',
-				   'normal text',
-				   '\x1B' + '\x61' + '\x30', // left align
-				   '\x0A' + '\x0A' + '\x0A' + '\x0A' + '\x0A' + '\x0A' + '\x0A',
-				   '\x1B' + '\x69',          // cut paper (old syntax)
-				// '\x1D' + '\x56'  + '\x00' // full cut (new syntax)
-				// '\x1D' + '\x56'  + '\x30' // full cut (new syntax)
-				// '\x1D' + '\x56'  + '\x01' // partial cut (new syntax)
-				// '\x1D' + '\x56'  + '\x31' // partial cut (new syntax)
-				//  '\x10' + '\x14' + '\x01' + '\x00' + '\x05',  // Generate Pulse to kick-out cash drawer**
-																// **for legacy drawer cable CD-005A.  Research before using.
-																// see also http://keyhut.com/popopen4.htm
-				];
-				qz.print(config, data);
-				
-				//Send cut paper command after print
 				var cut = [
-					'\x1B' + '\x40',          // init
-					'\x1B' + '\x69'         // cut paper (old syntax)
-				];
-				qz.print(config, cut);
+				   '\x0A' + '\x0A' + '\x0A' + '\x0A' + '\x0A' + '\x0A' + '\x0A',
+				   '\x1B' + '\x69'
+				]
+				data.push.apply(data, cut);   // cut paper (old syntax)
+				qz.print(config, data);
 			});
 		}
 	}
@@ -300,7 +245,13 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		for(var i=length; i<=11; i++){
 			total = total + ' ';
 		}
-		ret.push(total + '$' + doc.total.toString() + '\x0A');
+		total = total + '$' + doc.total.toString();
+		var tlength = total.length;
+		//Add extra spaces to align everything to the right
+		for(var i=0; i<(42-tlength); i++){
+			total = ' ' + total;
+		}
+		ret.push(total  + '\x0A');
 		
 		//For taxes
 		if(doc.taxes && doc.taxes.length > 0){
@@ -310,9 +261,16 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 				for(var i=length; i<=11; i++){
 					total = total + ' ';
 				}
-				ret.push(total + '$' + doc.total.toString() + '\x0A');
+				total = total + '$' + doc.total.toString();
+				var tlength = total.length;
+				//Add extra spaces to align everything to the right
+				for(var i=0; i<(42-tlength); i++){
+					total = ' ' + total;
+				}
+				ret.push(total + '\x0A');
 			});
 		}
+		
 		
 		//Grand Total
 		ret.push('\x1B' + '\x45' + '\x0D'); //Bold on
@@ -321,7 +279,13 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		for(var i=length; i<=11; i++){
 			total = total + ' ';
 		}
-		ret.push(total + '$' + doc.total.toString() + '\x0A');
+		total = total + '$' + doc.grand_total.toString();
+		var tlength = total.length;
+		//Add extra spaces to align everything to the right
+		for(var i=0; i<(42-tlength); i++){
+			total = ' ' + total;
+		}
+		ret.push(total + '\x0A');
 		ret.push('\x1B' + '\x45' + '\x0A'); //Bold off
 		
 		//Payments
@@ -329,31 +293,35 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		var cash_drawer = [];
 		if(doc.payments && doc.payments.length > 0){
 			doc.payments.forEach(function(row){
-				length = row.base_amount.toString().length;
-				total = row.mode_of_payment + ' ';
-				for(var i=length; i<=11; i++){
-					total = total + ' ';
+				if(row.base_amount > 0){
+					length = row.base_amount.toString().length;
+					total = row.mode_of_payment + ' ';
+					for(var i=length; i<=11; i++){
+						total = total + ' ';
+					}
+					total = total + '$' + row.base_amount.toString();
+					var tlength = total.length;
+					//Add extra spaces to align everything to the right
+					for(var i=0; i<(42-tlength); i++){
+						total = ' ' + total;
+					}
+					ret.push(total + '\x0A');
+					
+					//If it's a stripe payment, add mandatory information at end o receipt
+					if(row.mode_of_payment=='Stripe' && row.base_amount > 0){
+						stripe_info = [
+							'\x1B' + '\x61' + '\x31', // center align,
+							'\x0A',
+							row.card_brand.toUpperCase() + ' XXXXXXXXXXXX' + row.card_last4 + '\x0A',
+							'Auth CD: ' + row.card_authorization_code + '\x0A',
+							'AID: ' + row.card_dedicated_file_name + '\x0A',
+							row.card_application_preferred_name + '\x0A',
+							'TVR: ' + row.card_terminal_verification_results + '\x0A',
+							'TSI: ' + row.card_transaction_status_information + '\x0A',
+							'IAD: ' + row.card_dedicated_file_name
+						];
+					}
 				}
-				ret.push(total + '$' + doc.total.toString() + '\x0A');
-				
-				//If it's a stripe payment, add mandatory information at end o receipt
-				if(row.mode_of_payment=='Stripe' && row.base_amount > 0){
-					stripe_info = [
-						'\x1B' + '\x61' + '\x31', // center align
-						row.card_brand.toUpperCase() + ' XXXXXXXXXXXX' + row.card_last4 + '\x0A',
-						'Auth CD: ' + row.card_authorization_code + '\x0A',
-						'AID: ' + row.card_dedicated_file_name + '\x0A',
-						row.card_application_preferred_name + '\x0A',
-						'TVR: ' + row.card_terminal_verification_results + '\x0A',
-						'TSI: ' + row.card_transaction_status_information + '\x0A',
-						'IAD: ' + row.card_dedicated_file_name
-					];
-				}
-				
-				//If it's cash, kick out the cash drawer
-				cash_drawer = [
-					'\x10' + '\x14' + '\x01' + '\x00' + '\x05' //Generate Pulse to kick-out cash drawer
-				]
 			});
 		}
 		
@@ -364,7 +332,13 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 		for(var i=length; i<=11; i++){
 			total = total + ' ';
 		}
-		ret.push(total + '$' + doc.paid_amount.toString() + '\x0A');
+		total = total + '$' + doc.paid_amount.toString()
+		var tlength = total.length;
+		//Add extra spaces to align everything to the right
+		for(var i=0; i<(42-tlength); i++){
+			total = ' ' + total;
+		}
+		ret.push(total + '\x0A');
 		ret.push('\x1B' + '\x45' + '\x0A'); //Bold off
 		
 		//Add the stripe data
@@ -372,26 +346,21 @@ erpnext.PointOfSale.Controller = class extends erpnext.PointOfSale.Controller{
 			ret.push.apply(ret, stripe_info);
 		}
 		
-		//Add the cash drawer kickout
-		/*if(cash_drawer.length > 0){
-			ret.push.apply(ret, cash_drawer);
-		}*/
-		
 		return ret;
 	}
 	
 	get_item_print(item, qty, rate, amount){
 		var ilength = item.length;
 		var ret = [];
-		//Put in for loop in case item length > 31
-		for(var i=0; i<ilength; i=i+30){
-			ret.push(item.substring(i, i+30) + "\x0A");
+		//Put in for loop in case item length > 30
+		for(var i=0; i<ilength; i=i+29){
+			ret.push(item.substring(i, i+29) + "\x0A");
 		}
 		
 		//For quantity
 		var qty_rate = "$" + rate.toString() + "x " + qty.toString();
 		var qlength = qty_rate.length;
-		for(var i=0; i<(31-qlength); i++){
+		for(var i=0; i<(30-qlength); i++){
 			qty_rate = qty_rate + " ";
 		}
 		
